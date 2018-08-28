@@ -1,17 +1,17 @@
 #pragma once
 #include "Bullet.h"
-
-class BulletPlus :public Bullet {
+#include "GameScene.h"
+class BulletPro : public Bullet {
 public:
 	virtual void update(float dt);
-	static BulletPlus * createWithImage(bool );
+	static BulletPro * createWithImage(bool );
 };
 
 
-BulletPlus * BulletPlus::createWithImage(bool isFriendly)
+BulletPro * BulletPro::createWithImage(bool isFriendly)
 {
-	BulletPlus * bullet = new BulletPlus();
-	if (bullet && bullet->initWithFile("bullet17.png"))
+	BulletPro * bullet = new BulletPro();
+	if (bullet && bullet->initWithFile("bullet8.png"))
 	{
 		bullet->autorelease();
 		bullet->setVisible(false);
@@ -46,8 +46,7 @@ BulletPlus * BulletPlus::createWithImage(bool isFriendly)
 	return nullptr;
 }
 
-
-void BulletPlus::update(float dt)
+void BulletPro::update(float dt)
 {
 	//coordinate transformation
 	Vec2 pos = this->getPosition();
@@ -56,14 +55,17 @@ void BulletPlus::update(float dt)
 		/ Game::_tileMap->getTileSize().width;
 	Sprite *mytile0 = _breakable0->getTileAt(Vec2(X, Y));
 	Sprite *mycoll = coll->getTileAt(Vec2(X, Y));
-	if (mytile0 != nullptr && mytile0->isVisible() && this->isVisible() && mycoll)
-	{
+	if (mytile0 != nullptr && mytile0->isVisible() && this->isVisible() && mycoll) {
 		mytile0->setVisible(false);
 		mycoll->removeFromParent();
+		this->setVisible(false);
+		this->removeFromParent();
 		return;
 	}
 	Sprite *mytile1 = _breakable1->getTileAt(Vec2(X, Y));
 	if (mytile1 && mytile1->isVisible() && this->isVisible() && mycoll) {
+		mytile1->setVisible(false);
+		mycoll->removeFromParent();
 		this->setVisible(false);
 		this->removeFromParent();
 		return;

@@ -1,4 +1,4 @@
-#include "EnemyAI.h"
+ #include "EnemyAI.h"
 #include <time.h>
 #include <stdlib.h>
 #include <exception>
@@ -14,6 +14,7 @@ EnemyAI * EnemyAI::createWithEnemy(Enemy * obj)
 	auto enemyAI = new EnemyAI();
 	enemyAI->obj = obj;
 	enemyAI->vel = Vec2(0, 100);
+	enemyAI->isFrozen = false;
 
 	return enemyAI;
 }
@@ -24,6 +25,20 @@ Vec2 EnemyAI::tileCoordFromPosition(Vec2 pos) {
 	return Vec2(x, y);
 }
 
+bool EnemyAI::isCollidable(Vec2 target) {
+	Vec2 coordTarget = tileCoordFromPosition(target + Vec2(vel.x / 100 * 16,
+		vel.y / 100 * 16));
+	int tileGid = layer->getTileGIDAt(coordTarget);
+	if (tileGid > 0) {
+		Value prop = Game::_tileMap->getPropertiesForGID(tileGid);
+		ValueMap propValueMap = prop.asValueMap();
+		std::string collision = propValueMap["collidable"].asString();
+		if (collision == "true")
+			return true;
+	}
+	return false;
+}
+int nposition[4][4] = { {0,0,100,146},{180,0,-100,142},{90,100,0,127},{270,-100 ,0,124} };
 void EnemyAI::update(float dt)
 {
 	//obj->runAction(MoveBy::create(0.2, Vec2(0, 5) * dt));
@@ -41,11 +56,22 @@ void EnemyAI::update(float dt)
 	target = obj->getPosition() + vel * dt;
 	Size screenSize = Size((Vec2(Game::mapSizeWidth * Game::tileSize,
 		Game:: mapSizeHeight * Game::tileSize)));
-	if (target.y + 16 >= screenSize.height || target.y - 16 <= 0 || 
-		target.x + 16 >= screenSize.width || target.x - 16 <= 0)
+	int objContantSizeOfHalf = obj->getContentSize().height / 2;
+	if (target.y + objContantSizeOfHalf >= screenSize.height || target.y - objContantSizeOfHalf <= 0 ||
+		target.x + objContantSizeOfHalf >= screenSize.width || target.x - objContantSizeOfHalf <= 0)
 	{
 		int nDirection = rand() % 4;
-		obj->setDirection(nDirection);
+		switch (nDirection)
+		{
+		case 0:
+			obj->setDirection(146); break;
+		case 1:
+			obj->setDirection(142); break;
+		case 2:
+			obj->setDirection(127); break;
+		case 3:
+			obj->setDirection(124); break;
+		}
 
 		switch (nDirection)
 		{
@@ -74,28 +100,26 @@ void EnemyAI::update(float dt)
 		std::string collision = propValueMap["collidable"].asString();
 		if (collision == "true") {
 			CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("empty.mp3");
-			srand(time(NULL));
+
 			int nDirection = rand() % 4;
-			switch (nDirection)
-			{
-			case 0:
-				obj->runAction(RotateTo::create(0.2, 0));
-				vel = Vec2(0, 100); break;
-			case 1:
-				obj->runAction(RotateTo::create(0.2, 180));
-				vel = Vec2(0, -100); break;
-			case 2:
-				obj->runAction(RotateTo::create(0.2, 90));
-				vel = Vec2(100, 0); break;
-			case 3:
-				obj->runAction(RotateTo::create(0.2, 270));
-				vel = Vec2(-100, 0); break;
+			for (int i = 0; i < 4; i++) {
+				vel = Vec2(nposition[nDirection][1], nposition[nDirection][2]);
+				if (!isCollidable(target)) {
+					obj->runAction(RotateTo::create(0.2, nposition[nDirection][0]));
+					obj->setDirection(nposition[nDirection][3]);
+					return;
+				}
+				if (nDirection == 3) nDirection = -1;
+				nDirection++;
 			}
-			return;
 		}
 	}
-	if (obj->mydt < 0) {
-		//obj->openFire();
+	if (obj->mydt < 0 && obj->isVisible()) {
+		if (obj->getColor() == Color3B::GRAY)
+		{
+			obj->setColor(Color3B::WHITE);
+		}
+		obj->openFire(false);
 		obj->mydt = 1;
 	}
 	obj->mydt -= dt;

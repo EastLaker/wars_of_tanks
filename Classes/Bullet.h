@@ -9,7 +9,7 @@ using namespace cocos2d;
 class Bullet : public Sprite
 {
 	
-	CC_SYNTHESIZE(Vec2, velocity, Velocity);
+	CC_SYNTHESIZE(Vec2, vel, Vel);
 	CC_SYNTHESIZE(int, akt, AKT);
 
 public:
@@ -17,9 +17,11 @@ public:
 	static TMXLayer   *_breakable0;
 	static TMXLayer   *coll;
 	static TMXLayer * _breakable1;
-	static Bullet * createWithImage();
+	static Bullet * createWithImage(bool );
 	void shootBulletFromTank(OurTank * tank);
 	virtual void update(float dt);
+
+	bool isFriendly;
 };
 
 

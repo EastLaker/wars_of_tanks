@@ -5,14 +5,23 @@
 using namespace cocos2d;
 
 #define GOLDPATH "map/stageGold1.png"
-#define BulletscatterPath "map/3Bullets.png"
+#define BULLETSCATTERPATH "bulletscatter.png"
+#define BLUEBULLETPATH "Bluebullet.png"
+#define REDBULLETPATH "Redbullet.png"
+#define SHIELDPATH "BeatlessTank.png"
+#define SPEEDUPPATH "map/Speedup.png"
+#define ADDBLOODPATH "map/blood.png"
 
 typedef enum
 {
 	Gold,
 	Bulletscatter,
-	Weapon_1,
-	Weapon_2
+	Bluebullet,
+	Redbullet,
+	Skill_Shield,
+	ProBullet,
+	Speedup,
+	Addblood
 }PickupTypes;
 
 class PickupBase : public Sprite

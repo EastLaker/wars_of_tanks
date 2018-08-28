@@ -15,9 +15,12 @@ public:
 	Vec2 tileCoordFromPosition(Vec2 pos);
 	virtual void update(float dt);
 	static TMXLayer * layer;
+	bool isFrozen;
+	Enemy * obj;
 
 private:
-	Enemy * obj;
+	bool isCollidable(Vec2 target);
+
 	Vec2 vel;
 };
 

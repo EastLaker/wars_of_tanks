@@ -4,23 +4,34 @@
 #include "bullet/BulletFire.h"
 #include "bullet/BulletPlus.h"
 #include "bullet/BulletScatter.h"
+#include "Bullet/BulletPro.h"
 #include <SimpleAudioEngine.h>
 
 using namespace CocosDenshion;
 
 OurTank::OurTank(int initialHP)
 {
-	
-	
+	nVel = 200;
+
 	this->nHP = initialHP;
 	this->weaponType = WEAPON_0;
+	this->setVel(Vec2(0, nVel));
+	this->setDirection(146);
 
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 
-	auto body = PhysicsBody::createEdgeBox(Size(60, 60),
-		PHYSICSBODY_MATERIAL_DEFAULT, 3.0f, Vec2(30, 30));
-	body->setCategoryBitmask(0x01);
-	body->setContactTestBitmask(0x02);
+	auto body = PhysicsBody::createBox(Size(Vec2(50, 50)),
+		PHYSICSBODY_MATERIAL_DEFAULT, Vec2(25, 25));
+	body->setCategoryBitmask(0x07);
+	body->setContactTestBitmask(0x0A);
+	body->setCollisionBitmask(0xFF);
+	body->getShape(0)->setDensity(0.0f);
+	body->getShape(0)->setRestitution(0.0f);
+	body->getShape(0)->setFriction(0.0f);
+	body->setDynamic(false);
+	body->setGravityEnable(false);
+
+	//this->setPhysicsBody(body);
 	this->setPhysicsBody(body);
 	
 }
@@ -34,37 +45,44 @@ OurTank * OurTank::createWithImage(int initialHP)
 	}
 	player->mydt = 1;
 	player->setTag(1);
+
+	player->setSkillType(SKILL_0);
+
 	return player;
 }
 
-void OurTank::openFire()
+void OurTank::openFire(bool isFriendly)
 {
 	SimpleAudioEngine::getInstance()->playEffect("sound/sfx_fire1.mp3");
 	if (weaponType == WEAPON_0) {
-		Bullet * bullet = Bullet::createWithImage();
-		this->getParent()->addChild(bullet);
+		Bullet * bullet = Bullet::createWithImage(isFriendly);
+		this->getParent()->addChild(bullet, 5);
 		bullet->shootBulletFromTank(this);
 	}
 	else if(weaponType == WEAPON_1){
-		BulletPlus * bullet = BulletPlus::createWithImage();
+		BulletPlus * bullet = BulletPlus::createWithImage(isFriendly);
 		this->getParent()->addChild(bullet);
 		bullet->shootBulletFromTank(this);
-		
 	}
 	else if (weaponType == WEAPON_2) {
-		BulletFire * bullet = BulletFire::createWithImage();
+		BulletFire * bullet = BulletFire::createWithImage(isFriendly);
 		this->getParent()->addChild(bullet);
 		bullet->shootBulletFromTank(this);
 	}else if(weaponType == WEAPON_3) {
-		BulletScatter * bullet1 = BulletScatter::createWithImage(1);
-		BulletScatter * bullet2 = BulletScatter::createWithImage(2);
-		BulletScatter * bullet3 = BulletScatter::createWithImage(3);
-		this->getParent()->addChild(bullet1);
+		BulletScatter * bullet1 = BulletScatter::createWithImage(1, isFriendly);
+		BulletScatter * bullet2 = BulletScatter::createWithImage(2, isFriendly);
+		BulletScatter * bullet3 = BulletScatter::createWithImage(3, isFriendly);
+		this->getParent()->addChild(bullet1, 2);
 		bullet1->shootBulletFromTank(this);
-		this->getParent()->addChild(bullet2);
+		this->getParent()->addChild(bullet2, 2);
 		bullet2->shootBulletFromTank(this);
-		this->getParent()->addChild(bullet3);
+		this->getParent()->addChild(bullet3, 2);
 		bullet3->shootBulletFromTank(this);
+	}
+	else if (weaponType == WEAPON_4) {
+		BulletPro * bullet = BulletPro::createWithImage(isFriendly);
+		this->getParent()->addChild(bullet);
+		bullet->shootBulletFromTank(this);
 	}
 	/*switch (weaponType)
 	{
@@ -88,7 +106,6 @@ void OurTank::addenemy() {
 
 	TMXObjectGroup *group = Game::_tileMap->getObjectGroup("objects");
 	ValueMap spawnPoint_0 = group->getObject("playerA");
-	ValueMap enemy_spawn[10] = {};
 	while (spawnPoint_0 != ValueMap()) {
 		char enemyname[10] = "enemy";
 		char str[10];
@@ -96,7 +113,7 @@ void OurTank::addenemy() {
 		strcat(enemyname, str);
 		
 		++x;
-		log("%s", enemyname);
+		//log("%s", enemyname);
 		spawnPoint_0 = group->getObject(enemyname);
 		if (spawnPoint_0 == ValueMap()) { break; }
 
@@ -119,7 +136,7 @@ void OurTank::addenemy() {
 		int  y0 = spawnPoint_0["y"].asInt();
 		Game::enemy[i] = Enemy::createWithEnemyTypes(EnemyTypeEnemy1);
 		Game::enemy[i]->setPosition(Vec2(x0, y0));
-		this->getParent()->addChild(Game::enemy[i]);
+		this->getParent()->addChild(Game::enemy[i], 3);
 		Game::enemyAIs[i] = EnemyAI::createWithEnemy(Game::enemy[i]);
 	}
 }
@@ -128,8 +145,7 @@ void OurTank::addpickup() {
 	static int x = 0;
 	TMXObjectGroup *group = Game::_tileMap->getObjectGroup("objects");
 	ValueMap spawnPoint_0 = group->getObject("playerA");
-	ValueMap pickup_spawn[10] = {};
-	PickupBase* pickup[10] = {NULL};
+	
 	while (spawnPoint_0 != ValueMap()) {
 		char pickupname[10] = "pickup";
 		char str[10];
@@ -137,7 +153,7 @@ void OurTank::addpickup() {
 		strcat(pickupname, str);
 		++x;
 		
-		log("%s", pickupname);
+		//log("%s", pickupname);
 		spawnPoint_0 = group->getObject(pickupname);
 		if (spawnPoint_0 == ValueMap()) { break; }
 	}
@@ -150,10 +166,70 @@ void OurTank::addpickup() {
 		if (spawnPoint_0 == ValueMap()) { break; }
 		int  x0 = spawnPoint_0["x"].asInt();
 		int  y0 = spawnPoint_0["y"].asInt();
-		pickup[i] = PickupBase::createWithType(Bulletscatter);
-		pickup[i]->setPosition(Vec2(x0, y0));
-		pickup[i]->setPickupType(Bulletscatter);
-		this->getParent()->addChild(pickup[i]);
+		int tooltype = spawnPoint_0["ToolType"].asInt();
+		Game::pickup[i] = PickupBase::createWithType((PickupTypes)tooltype);
+		Game::pickup[i]->setAnchorPoint(Vec2(0.5,0.5f));
+		Game::pickup[i]->setPosition(Vec2(x0, y0));
+		Game::pickup[i]->setVisible(false);
+		this->getParent()->addChild(Game::pickup[i], 2);
 	}
 
+
+}
+void OurTank::addpickupV() {
+	static int x = 0;
+	TMXObjectGroup *group = Game::_tileMap->getObjectGroup("objects");
+	ValueMap spawnPoint_0 = group->getObject("playerA");
+	PickupBase * pickupV[10] = { NULL };
+
+
+	while (spawnPoint_0 != ValueMap()) {
+		char pickupname[10] = "pickupV";
+		char str[10];
+		sprintf(str, "%d", x);
+		strcat(pickupname, str);
+		++x;
+
+		//log("%s", pickupname);
+		spawnPoint_0 = group->getObject(pickupname);
+		if (spawnPoint_0 == ValueMap()) { break; }
+	}
+	for (int i = 0; i < x - 1; i++) {
+		char pickupname[10] = "pickupV";
+		char str[10];
+		sprintf(str, "%d", i);
+		strcat(pickupname, str);
+		spawnPoint_0 = group->getObject(pickupname);
+		if (spawnPoint_0 == ValueMap()) { break; }
+		int  x0 = spawnPoint_0["x"].asInt();
+		int  y0 = spawnPoint_0["y"].asInt();
+		int tooltype = spawnPoint_0["ToolType"].asInt();
+		pickupV[i] = PickupBase::createWithType((PickupTypes)tooltype);
+		pickupV[i]->setAnchorPoint(Vec2(0.5, 0.5f));
+		pickupV[i]->setPosition(Vec2(x0, y0));
+		this->getParent()->addChild(pickupV[i], 2);
+	}
+}
+
+void OurTank::useSkill()
+{
+	switch (this->getSkillType())
+	{
+	case NOSKILL:
+		break;
+	case SKILL_0:
+		for (int i = 0; i < Game::nEnemy; ++i)
+		{
+			//Game::enemyAIs[i]->isFrozen = true;
+			Game::enemy[i]->mydt = 5;
+			Game::enemy[i]->setColor(Color3B::GRAY);
+		}
+		this->setSkillType(NOSKILL);
+		break;
+	case SKILL_1:
+		break;
+	case SKILL_2:
+		break;
+	}
+	return;
 }

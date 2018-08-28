@@ -9,10 +9,7 @@ Enemy *Enemy::createWithEnemyTypes(EnemyTypes enemyType) {
 	Enemy *enemy = new Enemy(enemyType);
 	enemy->nHP = 3;
 	enemy->weaponType = WEAPON_0;
-	//auto body = PhysicsBody::createEdgeBox(Size(32, 32), PHYSICSBODY_MATERIAL_DEFAULT, 3.0f, Vec2(16, 16));
-	//body->setCategoryBitmask(0x02);
-	//body->setContactTestBitmask(0x02);
-	//enemy->setPhysicsBody(body);
+
 	const char * enemyFrameName = Enemy_1;
 	switch (enemyType) {
 	case EnemyTypeEnemy1:
@@ -26,13 +23,19 @@ Enemy *Enemy::createWithEnemyTypes(EnemyTypes enemyType) {
 	}
 	if (enemy && enemy->initWithFile(Enemy_1)) {  //check if enemy is created
 		enemy->autorelease();
-		auto body = PhysicsBody::createEdgeBox(Size(32, 32),
-			PHYSICSBODY_MATERIAL_DEFAULT, 3.0f);
+		auto body = PhysicsBody::createCircle(25);
 		
-		body->setCategoryBitmask(0x02);
-		body->setContactTestBitmask(0x02);
+		body->setCategoryBitmask(0x0C);
+		body->setContactTestBitmask(0x0C);
+		body->setCollisionBitmask(0xFF);
+		body->getShape(0)->setRestitution(1.0f);
+		body->getShape(0)->setFriction(0.0f);
+		body->getShape(0)->setDensity(1.0f);
+		body->setMass(100);
+		body->setGravityEnable(false);
 
 		enemy->setPhysicsBody(body);
+		
 
 		enemy->setTag(3);
 
@@ -54,6 +57,6 @@ void Enemy::update(float dt) {
 }
 
 void Enemy::shoot() {
-	openFire();
+	openFire(true);
 }
 
